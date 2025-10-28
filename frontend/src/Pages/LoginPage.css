@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+body {
+  margin: 0;
+  height: 100vh;
+  background: radial-gradient(circle at top left, #2a2a2a 0%, #121212 100%);
+  font-family: 'Inter', sans-serif;
+  color: #f9f9f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Background glow */
+.login-background::before {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 213, 79, 0.4), transparent 70%);
+  top: 10%;
+  left: 10%;
+  filter: blur(150px);
+  z-index: 0;
+}
+
+.login-container {
+  position: relative;
+  z-index: 2;
+  width: 380px;
+  padding: 60px 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 0 20px rgba(255, 255, 0, 0.05),
+    0 0 50px rgba(255, 255, 0, 0.05);
+  backdrop-filter: blur(25px);
+  text-align: center;
+  animation: floatIn 1s ease forwards;
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+h2 {
+  font-weight: 600;
+  color: #f1c40f;
+  letter-spacing: 1px;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+}
+
+p {
+  color: #bfbfbf;
+  font-size: 0.95rem;
+  margin-bottom: 40px;
+}
+
+.google-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1c40f;
+  color: #1e1e1e;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 6px 20px rgba(241, 196, 15, 0.3);
+  transition: all 0.3s ease;
+}
+
+.google-btn:hover {
+  background: linear-gradient(135deg, #ffe27a, #f9d423);
+  box-shadow: 0 8px 25px rgba(241, 196, 15, 0.5);
+  transform: translateY(-3px);
+}
+
+.google-icon {
+  position: absolute;
+  left: 18px;
+  height: 20px;
+  width: 20px;
+}
+
+.footer-text {
+  margin-top: 50px;
+  color: #777;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
