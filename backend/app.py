@@ -1,30 +1,42 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import base64
+
 import insightface
 import cv2
 import numpy as np
 
 
-detector = insightface.app.FaceAnalysis(providers=['CPUExecutionProvider'])  # or GPUExecutionProvider
+app = Flask(__name__)
+CORS(app)
+
+detector = insightface.app.FaceAnalysis(providers=['CPUExecutionProvider'])
 detector.prepare(ctx_id=0, det_size=(640,640))
 
 
-imageName = "face4"
-img = cv2.imread(f"faces/{imageName}.jpeg")
-faces = detector.get(img)
+@app.route("/detect", methods=["POST"])
+def detectFaces():
+    if 'image' not in request.files:
+        return jsonify({"error": "No images uploaded"}), 400
+    
+    file = request.files["image"]
+    image_bytes = file.read()
+    npimg = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+    faces = detector.get(img)
+    results = []
+    for face in faces:
+        bbox = face.bbox.astype(int).tolist()
+        results.append(bbox)
+        cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
+    _, buffer = cv2.imencode('.jpg', img)
+    encodedImage = base64.b64encode(buffer).decode('utf-8')
+    return jsonify({"faces": results, "marked_image":encodedImage})
+
+@app.route("/", methods=["GET"])
+def index():
+    return "✅ InsightFace API is running!"
 
 
-result = []
-for face in faces:
-    bbox = face['bbox']
-    vertices = [
-        (int(bbox[0]), int(bbox[1])),        # top-left
-        (int(bbox[2]), int(bbox[1])),        # top-right
-        (int(bbox[2]), int(bbox[3])),        # bottom-right
-        (int(bbox[0]), int(bbox[3]))         # bottom-left
-    ]
-
-    for v in vertices:
-        cv2.circle(img, v, radius=6, color=(0, 255, 0), thickness=-1)  # Green dot
-    result.append(vertices)
-
-cv2.imwrite(f"faces/{imageName}_marked.jpeg", img)  # Save the result
-print(result)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

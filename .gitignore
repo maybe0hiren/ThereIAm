@@ -2,3 +2,7 @@ secret.txt
 
 
 frontend/.env
+
+backend/env
+backend/faces
+backend/faceDetection.py
