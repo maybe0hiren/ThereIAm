@@ -1,4 +1,8 @@
 secret.txt
 
 backend/env
-backend/database/database.db
+backend/database/Images
+
+__pycache__/
+*.onnx
+*.db

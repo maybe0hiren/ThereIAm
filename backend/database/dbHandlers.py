@@ -46,19 +46,17 @@ def setup():
 def addImageToDB(imgAdd: str, faceHashList: list, classID: int):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    # Insert image
-    cursor.execute("""
-        INSERT INTO ImageTable (ClassID, Address)
-        VALUES (?, ?)
-    """, (classID, imgAdd))
 
-    image_id = cursor.lastrowid
-
-    # Insert hashes
-    cursor.executemany("""
-        INSERT INTO FaceHashTable (ImageID, HashValue)
-        VALUES (?, ?)
-    """, [(image_id, h) for h in faceHashList])
+    cursor.execute(
+        "INSERT OR IGNORE INTO ImageTable (ClassID, Address) VALUES (?, ?)",
+        (classID, imgAdd)
+    )
+    cursor.execute("SELECT ImageID FROM ImageTable WHERE Address=?", (imgAdd,))
+    image_id = cur.fetchone()[0]
+    cursor.executemany(
+        "INSERT INTO FaceHashTable (ImageID, HashValue) VALUES (?, ?)",
+        [(image_id, emb.tobytes()) for emb in faceHashList]
+    )
 
     conn.commit()
     conn.close()
