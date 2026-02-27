@@ -1,8 +1,4 @@
 secret.txt
-Diagram.jpeg
-
-frontend/.env
 
 backend/env
-backend/faces
-backend/faceDetection.py
+backend/database/database.db
