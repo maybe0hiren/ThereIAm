@@ -45,8 +45,3 @@ def imgToDB(imagesFolder, classID):
             embeddingsList.append(embeddings)
         #Add images and embeddings to the DB
         addImageToDB(str(imagePath), embeddingsList, classID)
-
-
-
-
-
