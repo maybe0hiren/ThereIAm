@@ -55,63 +55,13 @@ def addImageToDB(imgAdd: str, faceHashList: list, classID: int):
 
     # Fetch the ImageID for this image
     cursor.execute("SELECT ImageID FROM ImageTable WHERE Address=?", (imgAdd,))
-    image_id = cur.fetchone()[0]
+    image_id = cursor.fetchone()[0]
 
     # Insert all face embeddings linked to this image
     cursor.executemany(
         "INSERT INTO FaceHashTable (ImageID, HashValue) VALUES (?, ?)",
         [(image_id, emb.tobytes()) for emb in faceHashList]
     )
-
-    conn.commit()
-    conn.close()
-    print("Image entry successful.")
-
-
-def getImagesFromDB(faceHashList: list):
-    if not faceHashList:
-        return []
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    placeholders = ",".join("?" for _ in faceHashList)
-
-    cursor.execute(f"""
-        SELECT i.Address
-        FROM ImageTable i
-        JOIN FaceHashTable f ON i.ImageID = f.ImageID
-        WHERE f.HashValue IN ({placeholders})
-        GROUP BY i.ImageID
-        HAVING COUNT(DISTINCT f.HashValue) = ?
-    """, (*faceHashList, len(faceHashList)))
-
-    results = [row[0] for row in cursor.fetchall()]
-    conn.close()
-
-    return results
-
-
-if __name__ == "__main__":
-    setup()
-
-
-def addImageToDB(imgAdd: str, faceHashList: list, classID: int):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    # Insert image
-    cursor.execute("""
-        INSERT INTO ImageTable (ClassID, Address)
-        VALUES (?, ?)
-    """, (classID, imgAdd))
-
-    image_id = cursor.lastrowid
-
-    # Insert hashes
-    cursor.executemany("""
-        INSERT INTO FaceHashTable (ImageID, HashValue)
-        VALUES (?, ?)
-    """, [(image_id, h) for h in faceHashList])
 
     conn.commit()
     conn.close()
