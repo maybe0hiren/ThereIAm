@@ -1,11 +1,19 @@
 import sqlite3
+from insightface.app import FaceAnalysis
+import cv2
+
+
+from helpers import pHash
 
 DB_PATH = "database/database.db"
+
+embedder = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+embedder.prepare(ctx_id=-1)
 
 def setup():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    # User table
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS UserTable (
             UserID TEXT PRIMARY KEY,
@@ -15,15 +23,15 @@ def setup():
             FaceHash TEXT NOT NULL
         );
     """)
-    # Image table
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ImageTable (
-            ImageID INTEGER PRIMARY KEY AUTOINCREMENT,
+            ImageID TEXT PRIMARY KEY,
             ClassID INTEGER,
             Address TEXT UNIQUE NOT NULL
         );
     """)
-    # Facehash table
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS FaceHashTable (
             ImageID INTEGER NOT NULL,
@@ -32,7 +40,7 @@ def setup():
             FOREIGN KEY (ImageID) REFERENCES ImageTable(ImageID)
         );
     """)
-    #Indexing 
+
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_hashvalue
         ON FaceHashTable(HashValue);
@@ -42,30 +50,26 @@ def setup():
     conn.close()
     print("Setup completed.")
 
-
 def addImageToDB(imgAdd: str, faceHashList: list, classID: int):
+    image = cv2.imread(str(imgAdd))
+    image_id = pHash(image)
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Insert image record if it does not already exist
-    cursor.execute(
-        "INSERT OR IGNORE INTO ImageTable (ClassID, Address) VALUES (?, ?)",
-        (classID, imgAdd)
-    )
+    cursor.execute("""
+        INSERT OR IGNORE INTO ImageTable (ImageID, ClassID, Address)
+        VALUES (?, ?, ?)
+    """, (image_id, classID, imgAdd))
 
-    # Fetch the ImageID for this image
-    cursor.execute("SELECT ImageID FROM ImageTable WHERE Address=?", (imgAdd,))
-    image_id = cursor.fetchone()[0]
-
-    # Insert all face embeddings linked to this image
-    cursor.executemany(
-        "INSERT INTO FaceHashTable (ImageID, HashValue) VALUES (?, ?)",
-        [(image_id, emb.tobytes()) for emb in faceHashList]
-    )
+    cursor.executemany("""
+        INSERT OR IGNORE INTO FaceHashTable (ImageID, HashValue)
+        VALUES (?, ?)
+    """, [(image_id, emb.tobytes()) for emb in faceHashList])
 
     conn.commit()
     conn.close()
-    print("Image entry successful.")
+    print("Image data inserted in DB")
 
 
 def getImagesFromDB(faceHashList: list):
@@ -88,7 +92,6 @@ def getImagesFromDB(faceHashList: list):
 
     results = [row[0] for row in cursor.fetchall()]
     conn.close()
-
     return results
 
 

@@ -36,7 +36,7 @@ def uploadPhotos():
         filepath = UPLOAD_DIR / "dummyUser" / filename
         file.save(filepath)
         savedImages.append(str(filepath))
-    imgToDB("database/dummyUser", 12345)
+    imgToDB("database/Images/dummyUser", 12345)
     return jsonify({
         "count" : len(savedImages)
     }), 200
