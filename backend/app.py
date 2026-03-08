@@ -1,3 +1,7 @@
+import jwt
+import datetime
+from functools import wraps
+
 from flask import Flask, jsonify, request
 from pathlib import Path
 import uuid
@@ -9,6 +13,8 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 USER_UPLOAD_DIR = UPLOAD_DIR / "users"
 USER_UPLOAD_DIR.mkdir(exist_ok=True)
+
+SECRET_KEY = "DFGFGcvbhjgft65e44567uifd"
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
@@ -23,8 +29,24 @@ def home():
     })
 
 
+def tokenRequired(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        authHeader = request.headers.get("Authorization")
+        if not authHeader:
+            return jsonify({"error" : "Token missing"}), 401
+        try:
+            token = authHeader.split(" ")[1]
+            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            userID = data["userID"]
+        except Exception:
+            return jsonify({"error" : "Invalid token"}), 401
+        return f(userID, *args, **kwargs)
+    return decorated
+
 
 @app.route("/admin/uploadPhotos", methods=["POST"])
+@tokenRequired
 def uploadPhotos():
     if "photos" not in request.files:
         return jsonify({"error": "No photos uploaded"}), 400
@@ -78,16 +100,20 @@ def register():
 def login():
 
     data = request.json
-
     email = data.get("email")
     password = data.get("password")
 
     try:
         userID = loginPipeline(email, password)
 
+        token = jwt.encode({
+            "userID" : userID,
+            "exp" : datetime.utcnow() + datetime.timedelta(hours=12)
+        }, SECRET_KEY, algorithm="HS256")
+
         return jsonify({
             "status": "login_success",
-            "userID": userID
+            "token": token
         })
 
     except Exception as e:
@@ -96,14 +122,8 @@ def login():
 
 
 @app.route("/search", methods=["POST"])
-def search():
-
-    data = request.json
-    userID = data.get("userID")
-
-    if not userID:
-        return jsonify({"error": "Missing userID"}), 400
-
+@tokenRequired
+def search(userID):
     try:
         images = searchPipeline(userID)
 
@@ -111,7 +131,6 @@ def search():
             "count": len(images),
             "images": images
         })
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -1,8 +1,8 @@
 import bcrypt
 import cv2
-import numpy as np  
+import numpy as np
 from helpers import generateEmbeddings
-import dbHandlers
+import dbHandlersc
 
 
 def registerUser(name, email, password, images, embedder):
@@ -15,6 +15,7 @@ def registerUser(name, email, password, images, embedder):
         embeddings.append(emb)
     dbHandlers.addUserEmbeddings(userID, embeddings)
     return userID
+
 
 def loginUser(email, password):
     row = dbHandlers.getUserByEmail(email)
@@ -29,11 +30,19 @@ def loginUser(email, password):
 def findImages(userID, threshold=0.5):
     userEmbeddings = dbHandlers.getUserEmbeddings(userID)
     dbFaces = dbHandlers.getAllImageFaces()
+    if not userEmbeddings or not dbFaces:
+        return []
+    imageIDs = []
+    faceEmbeddings = []
+    for imgID, emb in dbFaces:
+        imageIDs.append(imgID)
+        faceEmbeddings.append(emb)
+    datasetMatrix = np.array(faceEmbeddings)
+    userMatrix = np.array(userEmbeddings)
+    similarityMatrix = datasetMatrix @ userMatrix.T
+    maxSimilarity = similarityMatrix.max(axis=1)
     matches = set()
-    for imageID, faceEmb in dbFaces:
-        for u_emb in userEmbeddings:
-            sim = np.dot(u_emb, faceEmb)
-            if sim >= threshold:
-                matches.add(imageID)
-                break
+    for idx, sim in enumerate(maxSimilarity):
+        if sim >= threshold:
+            matches.add(imageIDs[idx])
     return [dbHandlers.getImagePath(i) for i in matches]
