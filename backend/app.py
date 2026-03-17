@@ -5,6 +5,8 @@ from functools import wraps
 from flask import Flask, jsonify, request
 from pathlib import Path
 import uuid
+from flask import send_from_directory
+from flask_cors import CORS
 
 from main import imgToDB, registrationPipeline, loginPipeline, searchPipeline
 
@@ -18,6 +20,8 @@ SECRET_KEY = "DFGFGcvbhjgft65e44567uifd"
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
+
+CORS(app)
 
 
 # Health Check
@@ -47,7 +51,7 @@ def tokenRequired(f):
 
 @app.route("/admin/uploadPhotos", methods=["POST"])
 @tokenRequired
-def uploadPhotos():
+def uploadPhotos(userID):
     if "photos" not in request.files:
         return jsonify({"error": "No photos uploaded"}), 400
     files = request.files.getlist("photos")
@@ -108,7 +112,7 @@ def login():
 
         token = jwt.encode({
             "userID" : userID,
-            "exp" : datetime.utcnow() + datetime.timedelta(hours=12)
+            "exp" : datetime.datetime.utcnow() + datetime.timedelta(hours=12)
         }, SECRET_KEY, algorithm="HS256")
 
         return jsonify({
@@ -133,6 +137,11 @@ def search(userID):
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/images/<path:filename>")
+def serveImage(filename):
+    return send_from_directory("database/Images", filename)
 
 
 if __name__ == "__main__":

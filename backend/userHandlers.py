@@ -2,7 +2,7 @@ import bcrypt
 import cv2
 import numpy as np
 from helpers import generateEmbeddings
-import dbHandlersc
+import dbHandlers
 
 
 def registerUser(name, email, password, images, embedder):
