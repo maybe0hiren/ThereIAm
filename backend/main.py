@@ -69,26 +69,15 @@ def registrationPipeline(imagesFolder, name, email, password):
     for imagePath in imagesFolder.iterdir():
         if imagePath.suffix.lower() not in {".jpg", ".jpeg", ".png", ".bmp", ".webp"}:
             continue
-        image = cv2.imread(str(imagePath))
+        image = cv2.imread(str(imagePath))   
         if image is None or image.size == 0:
             continue
-        verticesList = detectFaces(image)
-        if not verticesList:
-            continue
-        for vertices in verticesList:
-            xCoords = [v[0] for v in vertices]
-            yCoords = [v[1] for v in vertices]
-            x1, x2 = max(0, min(xCoords)), min(image.shape[1], max(xCoords))
-            y1, y2 = max(0, min(yCoords)), min(image.shape[0], max(yCoords))
-            padding = 50
-            x1 = max(0, x1 - padding)
-            y1 = max(0, y1 - padding)
-            x2 = min(image.shape[1], x2 + padding)
-            y2 = min(image.shape[0], y2 + padding)
-            faceCrop = image[y1:y2, x1:x2]
-            if faceCrop.size == 0:
-                continue
-            userImages.append(faceCrop)
+        image = cv2.resize(image, (640, 640))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.equalizeHist(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY))
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        userImages.append(image)
+
     if not userImages:
         raise ValueError("No valid faces found for user registration")
     userID = registerUser(name, email, password, userImages, embedder)

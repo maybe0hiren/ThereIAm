@@ -1,0 +1,118 @@
+/* 🌤️ Base */
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #fff9db, #f1f3f5);
+  color: #333;
+}
+
+/* 🌟 Card */
+.card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 30px;
+  width: 360px;
+  margin: 80px auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  text-align: center;
+}
+
+/* 🧾 Headings */
+h2 {
+  margin-bottom: 20px;
+}
+
+/* ✨ Inputs */
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fffdf5;
+  outline: none;
+  transition: 0.2s;
+}
+
+input:focus {
+  border-color: #f4d35e;
+  box-shadow: 0 0 8px rgba(244, 211, 94, 0.4);
+}
+
+/* 🌼 Buttons */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f4d35e, #ffd166);
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(244, 211, 94, 0.4);
+}
+
+/* 🔗 Secondary button */
+.secondary-btn {
+  background: transparent;
+  border: 1px solid #ccc;
+}
+
+.secondary-btn:hover {
+  background: #f1f3f5;
+}
+
+/* 🎥 Camera video */
+video {
+  width: 100%;
+  border-radius: 12px;
+  margin-top: 15px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+/* 📸 Step text */
+.step-text {
+  margin-top: 10px;
+  font-weight: 500;
+  color: #555;
+}
+
+/* ⏳ Countdown overlay */
+.countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 60px;
+  font-weight: bold;
+  color: #f4d35e;
+  text-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
+
+/* 📦 Camera container */
+.camera-container {
+  position: relative;
+}
+
+/* 📸 Preview images */
+.preview-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: center;
+}
+
+.preview-container img {
+  width: 70px;
+  height: 70px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid #f4d35e;
+}

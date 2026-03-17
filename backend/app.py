@@ -96,6 +96,7 @@ def register():
             "userID": userID
         })
     except Exception as e:
+        print("REGISTER ERROR:", e)
         return jsonify({"error": str(e)}), 400
 
 

@@ -6,6 +6,7 @@ def generateEmbeddings(image, embedder):
     if image is None or image.size == 0:
         raise ValueError("Invalid Image")
     faces = embedder.get(image)
+    print("Faces from embedder:", len(faces) if faces else 0)
     if not faces:
         raise ValueError("No faces detected...")
     emb = faces[0].embedding
