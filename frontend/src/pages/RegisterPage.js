@@ -12,6 +12,7 @@ export default function Register() {
   const [capturing, setCapturing] = useState(false);
   const [step, setStep] = useState(0);
   const [countdown, setCountdown] = useState(null);
+  const [stream, setStream] = useState(null);
 
   const steps = [
     "Look straight",
@@ -29,6 +30,7 @@ export default function Register() {
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
           }
+          setStream(stream);
         } catch (err) {
           console.error(err);
           alert(err.name);
@@ -94,6 +96,9 @@ export default function Register() {
     try {
       await API.post("/register", data);
       alert("Registered successfully");
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
       navigate("/");
     } catch (err) {
       console.log(err.response?.data);

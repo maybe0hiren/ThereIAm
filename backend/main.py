@@ -62,6 +62,7 @@ def imgToDB(imagesFolder, classID):
 
 
 def registrationPipeline(imagesFolder, name, email, password):
+    print("Entered registration pipeline")
     imagesFolder = Path(imagesFolder)
     if not imagesFolder.exists() or not imagesFolder.is_dir():
         raise ValueError("User image folder not available")

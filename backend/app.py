@@ -86,6 +86,8 @@ def register():
     userFolder.mkdir(exist_ok=True)
     for file in files:
         suffix = Path(file.filename).suffix.lower()
+        if suffix not in {".jpg", ".jpeg", ".png", ".bmp", ".webp"}:
+            suffix = ".jpg"
         filename = f"{uuid.uuid4().hex}{suffix}"
         filepath = userFolder / filename
         file.save(filepath)
