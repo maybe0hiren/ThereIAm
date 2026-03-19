@@ -116,3 +116,41 @@ video {
   object-fit: cover;
   border: 2px solid #f4d35e;
 }
+
+/* Dashboard Layout */
+.dashboard {
+  padding: 20px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Search Section */
+.search-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Image Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.grid img {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  transition: 0.2s;
+}
+
+.grid img:hover {
+  transform: scale(1.03);
+}

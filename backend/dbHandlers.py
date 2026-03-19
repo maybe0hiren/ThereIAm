@@ -6,156 +6,209 @@ from helpers import pHash
 
 DB_PATH = "database/database.db"
 
+
 def setup():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS UserTable (
             UserID TEXT PRIMARY KEY,
             UserName TEXT NOT NULL,
             Email TEXT UNIQUE NOT NULL,
-            PasswordHash BLOB NOT NULL
+            PasswordHash BLOB NOT NULL,
+            Role TEXT NOT NULL
         );
     """)
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS UserFaceTable (
             UserID TEXT NOT NULL,
-            FaceHash BLOB NOT NULL,
-            FOREIGN KEY (UserID) REFERENCES UserTable(UserID)
+            FaceHash BLOB NOT NULL
         );
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ClassTable (
+            ClassID TEXT PRIMARY KEY,
+            ClassName TEXT NOT NULL,
+            ClassCode TEXT UNIQUE NOT NULL,
+            AdminID TEXT NOT NULL
+        );
+    """)
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ImageTable (
             ImageID TEXT PRIMARY KEY,
-            ClassID INTEGER,
+            ClassID TEXT,
             Address TEXT UNIQUE NOT NULL
         );
     """)
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS FaceHashTable (
             ImageID TEXT NOT NULL,
             HashValue BLOB NOT NULL,
-            PRIMARY KEY (ImageID, HashValue),
-            FOREIGN KEY (ImageID) REFERENCES ImageTable(ImageID)
+            PRIMARY KEY (ImageID, HashValue)
         );
     """)
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_hashvalue
-        ON FaceHashTable(HashValue);
-    """)
+
     conn.commit()
     conn.close()
-    print("Setup completed.")
 
 
-def createUser(username: str, email: str, passwordHash: bytes):
+def createUser(username, email, passwordHash, role="member"):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute("SELECT Email FROM UserTable WHERE Email=?", (email,))
     if cursor.fetchone():
         conn.close()
         raise ValueError("Email already exists")
+
     userId = str(uuid.uuid4())
-    cursor.execute(
-        "INSERT INTO UserTable (UserID, UserName, Email, PasswordHash) VALUES (?, ?, ?, ?)",
-        (userId, username, email, passwordHash)
-    )
+
+    cursor.execute("""
+        INSERT INTO UserTable (UserID, UserName, Email, PasswordHash, Role)
+        VALUES (?, ?, ?, ?, ?)
+    """, (userId, username, email, passwordHash, role))
+
     conn.commit()
     conn.close()
     return userId
 
 
-def addUserEmbeddings(userId: str, embeddings: list):
+def addUserEmbeddings(userId, embeddings):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.executemany(
         "INSERT INTO UserFaceTable (UserID, FaceHash) VALUES (?, ?)",
         [(userId, emb.tobytes()) for emb in embeddings]
     )
+
     conn.commit()
     conn.close()
 
 
-def getUserByEmail(email: str):
+def getUserByEmail(email):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT UserID, PasswordHash FROM UserTable WHERE Email=?",
-        (email,)
-    )
+
+    cursor.execute("""
+        SELECT UserID, PasswordHash, Role FROM UserTable WHERE Email=?
+    """, (email,))
+
     row = cursor.fetchone()
     conn.close()
     return row
 
 
-def getUserEmbeddings(userId: str):
+def getUserEmbeddings(userId):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute(
         "SELECT FaceHash FROM UserFaceTable WHERE UserID=?",
         (userId,)
     )
+
     rows = cursor.fetchall()
     conn.close()
-    return [np.frombuffer(row[0], dtype="float32") for row in rows]
+
+    return [np.frombuffer(r[0], dtype="float32") for r in rows]
 
 
-def addImageToDB(imgPath: str, faceEmbeddings: list, classId: int):
-    image = cv2.imread(str(imgPath))
-    imageId = pHash(image)
+def createClass(adminId, className, classCode):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
+    classId = str(uuid.uuid4())
+
     cursor.execute("""
-        INSERT OR IGNORE INTO ImageTable (ImageID, ClassID, Address)
-        VALUES (?, ?, ?)
-    """, (imageId, classId, imgPath))
-    cursor.executemany("""
-        INSERT OR IGNORE INTO FaceHashTable (ImageID, HashValue)
-        VALUES (?, ?)
-    """, [(imageId, emb.tobytes()) for emb in faceEmbeddings])
+        INSERT INTO ClassTable (ClassID, ClassName, ClassCode, AdminID)
+        VALUES (?, ?, ?, ?)
+    """, (classId, className, classCode, adminId))
+
     conn.commit()
     conn.close()
-    return imageId
+    return classId
 
 
-def getAllImageFaces():
+def getClassByCode(classCode):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT ImageID, HashValue FROM FaceHashTable")
-    rows = cursor.fetchall()
-    conn.close()
-    return [(r[0], np.frombuffer(r[1], dtype="float32")) for r in rows]
 
+    cursor.execute("""
+        SELECT ClassID FROM ClassTable WHERE ClassCode=?
+    """, (classCode,))
 
-def getImagePath(imageId: str):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT Address FROM ImageTable WHERE ImageID=?",
-        (imageId,)
-    )
     row = cursor.fetchone()
     conn.close()
     return row[0] if row else None
 
 
-def getImagesFromDB(faceHashList: list):
-    if not faceHashList:
-        return []
+def addImageToDB(imgPath, faceEmbeddings, classId):
+    image = cv2.imread(str(imgPath))
+    imageId = pHash(image)
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    placeholders = ",".join("?" for _ in faceHashList)
-    cursor.execute(f"""
-        SELECT i.Address
-        FROM ImageTable i
-        JOIN FaceHashTable f ON i.ImageID = f.ImageID
-        WHERE f.HashValue IN ({placeholders})
-        GROUP BY i.ImageID
-        HAVING COUNT(DISTINCT f.HashValue) = ?
-    """, (*faceHashList, len(faceHashList)))
-    results = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO ImageTable (ImageID, ClassID, Address)
+        VALUES (?, ?, ?)
+    """, (imageId, classId, imgPath))
+
+    cursor.executemany("""
+        INSERT OR IGNORE INTO FaceHashTable (ImageID, HashValue)
+        VALUES (?, ?)
+    """, [(imageId, emb.tobytes()) for emb in faceEmbeddings])
+
+    conn.commit()
     conn.close()
-    return results
+    return imageId
+
+
+def getAllImageFacesByClass(classId):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT f.ImageID, f.HashValue
+        FROM FaceHashTable f
+        JOIN ImageTable i ON f.ImageID = i.ImageID
+        WHERE i.ClassID=?
+    """, (classId,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [(r[0], np.frombuffer(r[1], dtype="float32")) for r in rows]
+
+
+def getImagePath(imageId):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT Address FROM ImageTable WHERE ImageID=?", (imageId,))
+    row = cursor.fetchone()
+
+    conn.close()
+    return row[0] if row else None
+
+def getClassesByAdmin(adminId):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT ClassName, ClassCode FROM ClassTable WHERE AdminID=?
+    """, (adminId,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [{"name": r[0], "code": r[1]} for r in rows]
 
 
 if __name__ == "__main__":

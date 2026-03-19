@@ -61,8 +61,7 @@ def imgToDB(imagesFolder, classID):
             addImageToDB(str(imagePath), faceHashList, classID)
 
 
-def registrationPipeline(imagesFolder, name, email, password):
-    print("Entered registration pipeline")
+def registrationPipeline(imagesFolder, name, email, password, role):
     imagesFolder = Path(imagesFolder)
     if not imagesFolder.exists() or not imagesFolder.is_dir():
         raise ValueError("User image folder not available")
@@ -81,7 +80,7 @@ def registrationPipeline(imagesFolder, name, email, password):
 
     if not userImages:
         raise ValueError("No valid faces found for user registration")
-    userID = registerUser(name, email, password, userImages, embedder)
+    userID = registerUser(name, email, password, userImages, embedder, role)
     return userID
 
 
@@ -94,28 +93,15 @@ def loginPipeline(email, password):
         print("Login failed:", e)
         return None
 
-def searchPipeline(userID, threshold=0.5):
+def searchPipeline(userID, classCode, threshold=0.5):
     try:
-        images = findImages(userID, threshold)
-        print("Found", len(images), "matching images.")
+        classId = dbHandlers.getClassByCode(classCode)
+        if not classId:
+            raise ValueError("Invalid class code")
+
+        images = findImages(userID, classId, threshold)
         return images
+
     except Exception as e:
         print("Search failed:", e)
         return []
-
-
-if __name__ == "__main__":
-    imgToDB("database/Images/dummyUser", 1234)
-    userID = registrationPipeline(
-        "database/Images/dummyUser",
-        "TestUser",
-        "test@example.com",
-        "testpassword"
-    )
-    print("Registered UserID:", userID)
-    loggedUserID = loginPipeline("test@example.com", "testpassword")
-    print("Logged in UserID:", loggedUserID)
-    results = searchPipeline(loggedUserID)
-    print("Search results:")
-    for r in results:
-        print(r)

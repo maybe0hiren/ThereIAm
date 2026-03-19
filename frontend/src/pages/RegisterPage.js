@@ -7,7 +7,7 @@ export default function Register() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const [form, setForm] = useState({});
+  const [form, setForm] = useState({ role: "member" });
   const [images, setImages] = useState([]);
   const [capturing, setCapturing] = useState(false);
   const [step, setStep] = useState(0);
@@ -21,29 +21,33 @@ export default function Register() {
   ];
 
   const isFormValid = form.name && form.email && form.password;
-  
+
   useEffect(() => {
     if (capturing) {
       const initCamera = async () => {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+
           if (videoRef.current) {
-            videoRef.current.srcObject = stream;
+            videoRef.current.srcObject = mediaStream;
           }
-          setStream(stream);
+
+          setStream(mediaStream);
         } catch (err) {
-          console.error(err);
           alert(err.name);
         }
       };
 
       initCamera();
     }
-  }, [capturing]);
 
-  const startCamera = () => {
-    setCapturing(true);
-  };
+    return () => {
+      // Cleanup when component unmounts
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [capturing]);
 
   const captureImage = () => {
     let count = 3;
@@ -51,7 +55,12 @@ export default function Register() {
 
     const interval = setInterval(() => {
       count--;
-      setCountdown(count >= 0 ? count : null);
+
+      if (count >= 1) {
+        setCountdown(count);
+      } else {
+        setCountdown(null);
+      }
 
       if (count < 0) {
         clearInterval(interval);
@@ -76,32 +85,31 @@ export default function Register() {
   };
 
   const handleRegister = async () => {
-    if (!form.name || !form.email || !form.password) {
-      alert("Fill all fields");
-      return;
-    }
-
     if (images.length < 3) {
-      alert("Capture all required images");
+      alert("Capture all images");
       return;
     }
 
     const data = new FormData();
+
     data.append("name", form.name);
     data.append("email", form.email);
     data.append("password", form.password);
+    data.append("role", form.role);
 
     images.forEach((img) => data.append("photos", img));
 
     try {
       await API.post("/register", data);
-      alert("Registered successfully");
+
+      alert("Registered");
+
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
+
       navigate("/");
     } catch (err) {
-      console.log(err.response?.data);
       alert(err.response?.data?.error || "Error");
     }
   };
@@ -128,16 +136,25 @@ export default function Register() {
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
 
-            <button 
-                onClick={startCamera} 
-                disabled={!isFormValid}
-                style={{
-                    opacity: isFormValid ? 1 : 0.5,
-                    cursor: isFormValid ? "pointer" : "not-allowed"
-                }}
-            >Start Face Capture</button>
+          <select
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+          >
+            <option value="member">Member</option>
+            <option value="admin">Admin</option>
+          </select>
 
-          <button className="secondary-btn" onClick={() => navigate("/")}>
+          <button
+            disabled={!isFormValid}
+            onClick={() => setCapturing(true)}
+            style={{
+              opacity: isFormValid ? 1 : 0.5,
+              cursor: isFormValid ? "pointer" : "not-allowed"
+            }}
+          >
+            Start Face Capture
+          </button>
+
+          <button onClick={() => navigate("/")}>
             Existing User?
           </button>
         </>
@@ -145,14 +162,15 @@ export default function Register() {
 
       {capturing && (
         <>
-          <p className="step-text">
-            {steps[step] || "Done capturing!"}
-          </p>
+          <p className="step-text">{steps[step]}</p>
 
           <div className="camera-container">
             <video ref={videoRef} autoPlay playsInline />
+
             {countdown !== null && (
-              <div className="countdown">{countdown}</div>
+              <div className="countdown">
+                {countdown}
+              </div>
             )}
           </div>
 
