@@ -11,7 +11,6 @@ export default function AdminDashboard() {
 
   const token = localStorage.getItem("token");
 
-  // 🔹 Fetch classes on load
   useEffect(() => {
     fetchClasses();
   }, []);
@@ -30,7 +29,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // 🔹 Create Class
   const handleCreateClass = async () => {
     if (!className) {
       alert("Enter class name");
@@ -61,12 +59,35 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
-  // 🔹 Navigate to class page
   const handleEnterClass = (classCode) => {
     navigate(`/admin/class/${classCode}`);
   };
 
-  // 🔹 Logout
+  const deleteClass = async (classCode) => {
+    if (!classCode) {
+      alert("Select a Class")
+      return;
+    }
+    setLoading(true);
+
+    try{
+      await API.post(
+        "/admin/deleteClass",
+        { classCode }, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setClasses(prev => prev.filter(c => c.code !== classCode));
+      alert("Class deleted!")
+    } catch (err) {
+      alert(err.response?.data?.error || "Error Deleting class");
+    }
+    setLoading(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -76,7 +97,6 @@ export default function AdminDashboard() {
   return (
     <div className="dashboard">
 
-      {/* Header */}
       <div className="header">
         <h2>Admin Dashboard</h2>
         <button className="secondary-btn" onClick={handleLogout}>
@@ -84,7 +104,6 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* If NO classes → show create */}
       {classes.length === 0 && (
         <div className="card">
           <h3>Create Your First Class</h3>
@@ -101,10 +120,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* If classes exist */}
       {classes.length > 0 && (
         <>
-          {/* Create new class */}
           <div className="card">
             <h3>Create New Class</h3>
 
@@ -119,7 +136,6 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          {/* Class List */}
           <div className="card">
             <h3>Your Classes</h3>
 
@@ -133,6 +149,9 @@ export default function AdminDashboard() {
 
                   <button onClick={() => handleEnterClass(cls.code)}>
                     Enter
+                  </button>
+                  <button onClick={() => deleteClass(cls.code)}>
+                    Delete
                   </button>
                 </div>
               ))}

@@ -211,6 +211,15 @@ def getClassesByAdmin(adminId):
 
     return [{"name": r[0], "code": r[1]} for r in rows]
 
+def deleteClass(classId):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM ImageTable WHERE ClassID=?", (classId,))
+    cursor.execute("DELETE FROM ClassTable WHERE ClassID=?", (classId,))
+
+    conn.commit()
+    conn.close()
+
 
 if __name__ == "__main__":
     setup()

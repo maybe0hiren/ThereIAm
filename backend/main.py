@@ -1,7 +1,7 @@
 from insightface.app import FaceAnalysis
 from pathlib import Path
 import cv2
-
+import shutil
 
 from helpers import generateEmbeddings
 from imgProcessing.faceDetection import detectFaces
@@ -54,7 +54,7 @@ def imgToDB(imagesFolder, classID):
                 print(e)
                 continue
         if faceHashList:
-            addImageToDB(str(imagePath), faceHashList, classID)
+            dbHandlers.addImageToDB(str(imagePath), faceHashList, classID)
 
 
 def registrationPipeline(imagesFolder, name, email, password, role):
@@ -93,7 +93,6 @@ def searchPipeline(userID, classCode):
     print("Entered search pipeline")
     try:
         classId = dbHandlers.getClassByCode(classCode)
-        print(classId)
         if not classId:
             raise ValueError("Invalid class code")
 
@@ -102,4 +101,17 @@ def searchPipeline(userID, classCode):
 
     except Exception as e:
         print("Search failed:", e)
+        raise e
+
+def deleteClassPipeline(classCode):
+    print("Entered Delete Class Pipeline")
+    try:
+        classId = dbHandlers.getClassByCode(classCode)
+        if not classId:
+            raise ValueError("Invalid class code")
+        dbHandlers.deleteClass(classId)
+        shutil.rmtree(f"database/Images/{classCode}")
+
+    except Exception as e:
+        print("Deletion error: ", e)
         raise e

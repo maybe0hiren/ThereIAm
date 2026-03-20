@@ -7,7 +7,7 @@ from pathlib import Path
 import uuid
 from flask_cors import CORS
 
-from main import imgToDB, registrationPipeline, loginPipeline, searchPipeline
+from main import imgToDB, registrationPipeline, loginPipeline, searchPipeline, deleteClassPipeline
 import dbHandlers
 
 UPLOAD_DIR = Path("database/Images")
@@ -205,6 +205,24 @@ def search(userID, role):
             "images": images
         })
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/admin/deleteClass", methods=["POST"])
+@tokenRequired
+@adminRequired
+def deleteClass(userId, role):
+    data = request.json
+    classCode = data.get("classCode")
+    if not classCode:
+        return jsonify({"error": "Class code required"}), 400
+
+    try:
+        deleteClassPipeline(classCode)
+        return jsonify({
+            "status": "ok"
+        })
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
