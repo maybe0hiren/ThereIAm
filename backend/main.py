@@ -5,24 +5,20 @@ import cv2
 
 from helpers import generateEmbeddings
 from imgProcessing.faceDetection import detectFaces
-from dbHandlers import addImageToDB
+import dbHandlers
 from userHandlers import registerUser
 from userHandlers import loginUser
 from userHandlers import findImages
 
 
-#Create an embedder
 embedder = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
 embedder.prepare(ctx_id=-1)
 
-#Image to Embddings in DB pipeline
 def imgToDB(imagesFolder, classID):
-    #Setup the folder
     imagesFolder = Path(imagesFolder)
     if not imagesFolder.exists() or not imagesFolder.is_dir():
         raise ValueError("Class not available...")
 
-    #Handle images in the folder
     for imagePath in imagesFolder.iterdir():
         if imagePath.suffix.lower() not in {".jpg", ".jpeg", ".png", ".bmp", ".webp"}:
             continue
@@ -93,15 +89,17 @@ def loginPipeline(email, password):
         print("Login failed:", e)
         return None
 
-def searchPipeline(userID, classCode, threshold=0.5):
+def searchPipeline(userID, classCode):
+    print("Entered search pipeline")
     try:
         classId = dbHandlers.getClassByCode(classCode)
+        print(classId)
         if not classId:
             raise ValueError("Invalid class code")
 
-        images = findImages(userID, classId, threshold)
+        images = findImages(userID, classId)
         return images
 
     except Exception as e:
         print("Search failed:", e)
-        return []
+        raise e

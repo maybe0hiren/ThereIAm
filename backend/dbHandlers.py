@@ -136,6 +136,7 @@ def createClass(adminId, className, classCode):
 
 
 def getClassByCode(classCode):
+    print("Entered GetClassByCode")
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -195,7 +196,7 @@ def getImagePath(imageId):
     row = cursor.fetchone()
 
     conn.close()
-    return row[0] if row else None
+    return (row[0]).replace("database/Images/", "") if row else None
 
 def getClassesByAdmin(adminId):
     conn = sqlite3.connect(DB_PATH)

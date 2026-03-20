@@ -24,7 +24,6 @@ app.config["DEBUG"] = True
 CORS(app)
 
 
-# Health Check
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({
@@ -33,7 +32,6 @@ def home():
     })
 
 
-# 🔐 Token Middleware
 def tokenRequired(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -57,7 +55,6 @@ def tokenRequired(f):
     return decorated
 
 
-# 🔒 Admin Middleware
 def adminRequired(f):
     @wraps(f)
     def decorated(userID, role, *args, **kwargs):
@@ -67,7 +64,6 @@ def adminRequired(f):
     return decorated
 
 
-# ------------------ ADMIN ------------------
 
 @app.route("/admin/createClass", methods=["POST"])
 @tokenRequired
@@ -131,7 +127,6 @@ def getAdminClasses(userID, role):
     return jsonify({"classes": classes})
 
 
-# ------------------ AUTH ------------------
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -192,11 +187,11 @@ def login():
         return jsonify({"error": str(e)}), 401
 
 
-# ------------------ MEMBER ------------------
 
 @app.route("/search", methods=["POST"])
 @tokenRequired
 def search(userID, role):
+    print("Search Endpoint called")
     data = request.json
     classCode = data.get("classCode")
 
@@ -214,7 +209,6 @@ def search(userID, role):
         return jsonify({"error": str(e)}), 500
 
 
-# ------------------ STATIC ------------------
 
 @app.route("/images/<path:filename>")
 def serveImage(filename):

@@ -32,30 +32,49 @@ def loginUser(email, password):
     return userID, role
 
 
-def findImages(userID, classId, threshold=0.5):
+def findImages(userID, classId, threshold=0.2):
+    print("Entered Find Images")
+
     userEmbeddings = dbHandlers.getUserEmbeddings(userID)
+    print(f"User Embeddings Count: {len(userEmbeddings) if userEmbeddings else 0}")
+
     dbFaces = dbHandlers.getAllImageFacesByClass(classId)
+    print(f"Total Faces in Class: {len(dbFaces) if dbFaces else 0}")
 
     if not userEmbeddings or not dbFaces:
+        print("No embeddings or no faces found. Returning empty list.")
         return []
 
     imageIDs = []
     faceEmbeddings = []
 
+    print("Separating image IDs and embeddings...")
     for imgID, emb in dbFaces:
         imageIDs.append(imgID)
         faceEmbeddings.append(emb)
 
+    print(f"Collected {len(faceEmbeddings)} face embeddings")
+
     datasetMatrix = np.array(faceEmbeddings)
     userMatrix = np.array(userEmbeddings)
 
+    print(f"Dataset Matrix Shape: {datasetMatrix.shape}")
+    print(f"User Matrix Shape: {userMatrix.shape}")
+
     similarityMatrix = datasetMatrix @ userMatrix.T
     maxSimilarity = similarityMatrix.max(axis=1)
-
     matches = set()
 
+    print(f"Applying threshold: {threshold}")
     for idx, sim in enumerate(maxSimilarity):
+        print(f"Face {idx}: Similarity = {sim}")
         if sim >= threshold:
+            print("Image found")
             matches.add(imageIDs[idx])
 
-    return [dbHandlers.getImagePath(i) for i in matches]
+    print(f"Matched Image IDs: {matches}")
+
+    result = [dbHandlers.getImagePath(i) for i in matches]
+    print(f"Final Image Paths: {result}")
+
+    return result

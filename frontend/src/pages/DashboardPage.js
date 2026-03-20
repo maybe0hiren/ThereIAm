@@ -29,7 +29,6 @@ export default function Dashboard() {
           },
         }
       );
-
       setImages(res.data.images || []);
     } catch (err) {
       alert(err.response?.data?.error || "Search failed");
@@ -65,7 +64,6 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
 
-      {/* Header */}
       <div className="header">
         <h2>ThereIAm</h2>
         <button className="secondary-btn" onClick={handleLogout}>
@@ -73,7 +71,6 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Class Code Input */}
       <div className="search-section">
         <input
           placeholder="Enter Class Code"
@@ -86,7 +83,6 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Results */}
       <div className="grid">
         {images.map((img, i) => (
           <div key={i} className="image-card">
