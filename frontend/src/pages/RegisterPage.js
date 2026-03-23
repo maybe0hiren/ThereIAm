@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import "./RegisterPage.css";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -14,12 +17,7 @@ export default function Register() {
   const [countdown, setCountdown] = useState(null);
   const [stream, setStream] = useState(null);
 
-  const steps = [
-    "Look straight",
-    "Turn slightly left",
-    "Turn slightly right"
-  ];
-
+  const steps = ["Look straight", "Turn slightly left", "Turn slightly right"];
   const isFormValid = form.name && form.email && form.password;
 
   useEffect(() => {
@@ -42,7 +40,6 @@ export default function Register() {
     }
 
     return () => {
-      // Cleanup when component unmounts
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
@@ -56,11 +53,8 @@ export default function Register() {
     const interval = setInterval(() => {
       count--;
 
-      if (count >= 1) {
-        setCountdown(count);
-      } else {
-        setCountdown(null);
-      }
+      if (count >= 1) setCountdown(count);
+      else setCountdown(null);
 
       if (count < 0) {
         clearInterval(interval);
@@ -91,7 +85,6 @@ export default function Register() {
     }
 
     const data = new FormData();
-
     data.append("name", form.name);
     data.append("email", form.email);
     data.append("password", form.password);
@@ -101,12 +94,9 @@ export default function Register() {
 
     try {
       await API.post("/register", data);
-
       alert("Registered");
 
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      if (stream) stream.getTracks().forEach(track => track.stop());
 
       navigate("/");
     } catch (err) {
@@ -115,48 +105,25 @@ export default function Register() {
   };
 
   return (
-    <div className="card">
+    <Card>
       <h2>Register</h2>
 
       {!capturing && (
         <>
-          <input
-            placeholder="Name"
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
+          <input placeholder="Name" onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input placeholder="Email" onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <input type="password" placeholder="Password" onChange={(e) => setForm({ ...form, password: e.target.value })} />
 
-          <input
-            placeholder="Email"
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-
-          <select
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
-          >
+          <select onChange={(e) => setForm({ ...form, role: e.target.value })}>
             <option value="member">Member</option>
             <option value="admin">Admin</option>
           </select>
 
-          <button
-            disabled={!isFormValid}
-            onClick={() => setCapturing(true)}
-            style={{
-              opacity: isFormValid ? 1 : 0.5,
-              cursor: isFormValid ? "pointer" : "not-allowed"
-            }}
-          >
+          <Button disabled={!isFormValid} onClick={() => setCapturing(true)}>
             Start Face Capture
-          </button>
+          </Button>
 
-          <button onClick={() => navigate("/")}>
-            Existing User?
-          </button>
+          <Button onClick={() => navigate("/")}>Existing User?</Button>
         </>
       )}
 
@@ -166,12 +133,7 @@ export default function Register() {
 
           <div className="camera-container">
             <video ref={videoRef} autoPlay playsInline />
-
-            {countdown !== null && (
-              <div className="countdown">
-                {countdown}
-              </div>
-            )}
+            {countdown !== null && <div className="countdown">{countdown}</div>}
           </div>
 
           <canvas ref={canvasRef} style={{ display: "none" }} />
@@ -183,12 +145,12 @@ export default function Register() {
           </div>
 
           {step < 3 ? (
-            <button onClick={captureImage}>Capture</button>
+            <Button onClick={captureImage}>Capture</Button>
           ) : (
-            <button onClick={handleRegister}>Finish Registration</button>
+            <Button onClick={handleRegister}>Finish Registration</Button>
           )}
         </>
       )}
-    </div>
+    </Card>
   );
 }

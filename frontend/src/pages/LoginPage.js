@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import "./LoginPage.css";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,35 +22,23 @@ export default function Login() {
       } else {
         navigate("/dashboard");
       }
-
     } catch (err) {
       alert(err.response?.data?.error || "Login failed");
     }
   };
 
   return (
-    <div className="card">
+    <Card>
       <h2>Login</h2>
 
-      <input
-        placeholder="Email"
-        onChange={(e) => setEmail(e.target.value)}
-      />
+      <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+      <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
 
-      <input
-        type="password"
-        placeholder="Password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
+      <Button onClick={handleLogin}>Login</Button>
 
-      <button onClick={handleLogin}>Login</button>
-
-      <button
-        className="secondary-btn"
-        onClick={() => navigate("/register")}
-      >
+      <Button className="secondary-btn" onClick={() => navigate("/register")}>
         New User?
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 }

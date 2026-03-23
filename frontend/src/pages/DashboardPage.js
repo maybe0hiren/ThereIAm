@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
+import Header from "../components/Header";
+import Button from "../components/Button";
+import "./DashboardPage.css";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -45,7 +48,6 @@ export default function Dashboard() {
   const downloadImage = async (imgPath, index) => {
     try {
       const url = `http://localhost:5000/images/${imgPath}`;
-
       const response = await fetch(url);
       const blob = await response.blob();
 
@@ -63,13 +65,11 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard">
-
-      <div className="header">
-        <h2>ThereIAm</h2>
-        <button className="secondary-btn" onClick={handleLogout}>
+      <Header title="ThereIAm">
+        <Button className="secondary-btn" onClick={handleLogout}>
           Logout
-        </button>
-      </div>
+        </Button>
+      </Header>
 
       <div className="search-section">
         <input
@@ -78,26 +78,19 @@ export default function Dashboard() {
           onChange={(e) => setClassCode(e.target.value.toUpperCase())}
         />
 
-        <button onClick={handleSearch} disabled={!classCode}>
+        <Button onClick={handleSearch} disabled={!classCode}>
           {loading ? "Searching..." : "Find My Photos"}
-        </button>
+        </Button>
       </div>
 
       <div className="grid">
         {images.map((img, i) => (
-          <div key={i} className="image-card">
-            <img
-              src={`http://localhost:5000/images/${img}`}
-              alt="result"
-            />
-
-            <button onClick={() => downloadImage(img, i)}>
-              Download
-            </button>
+          <div key={i}>
+            <img src={`http://localhost:5000/images/${img}`} alt="result" />
+            <Button onClick={() => downloadImage(img, i)}>Download</Button>
           </div>
         ))}
       </div>
-
     </div>
   );
 }

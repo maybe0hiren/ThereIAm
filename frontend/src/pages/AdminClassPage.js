@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "../api";
+import Header from "../components/Header";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import "./AdminClassPage.css";
 
 export default function AdminClassPage() {
   const navigate = useNavigate();
@@ -11,7 +15,6 @@ export default function AdminClassPage() {
 
   const token = localStorage.getItem("token");
 
-  // 🔹 Upload Photos
   const handleUpload = async () => {
     if (!files || files.length === 0) {
       alert("Select images first");
@@ -36,7 +39,6 @@ export default function AdminClassPage() {
 
       alert(`Uploaded ${res.data.count} images`);
       setFiles([]);
-
     } catch (err) {
       alert(err.response?.data?.error || "Upload failed");
     }
@@ -44,7 +46,6 @@ export default function AdminClassPage() {
     setLoading(false);
   };
 
-  // 🔹 Logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -53,39 +54,19 @@ export default function AdminClassPage() {
 
   return (
     <div className="dashboard">
-
-      {/* Header */}
-      <div className="header">
-        <h2>Class: {classCode}</h2>
-
-        <div>
-          <button
-            className="secondary-btn"
-            onClick={() => navigate("/admin")}
-          >
-            Back
-          </button>
-
-          <button
-            className="secondary-btn"
-            onClick={handleLogout}
-            style={{ marginLeft: "10px" }}
-          >
-            Logout
-          </button>
+      <Header title={`Class: ${classCode}`}>
+        <div className="header-actions">
+          <Button onClick={() => navigate("/admin")}>Back</Button>
+          <Button onClick={handleLogout}>Logout</Button>
         </div>
-      </div>
+      </Header>
 
-      {/* Class Info */}
-      <div className="card">
+      <Card>
         <h3>Class Code</h3>
-        <p style={{ fontSize: "20px", fontWeight: "bold" }}>
-          {classCode}
-        </p>
-      </div>
+        <p className="class-code">{classCode}</p>
+      </Card>
 
-      {/* Upload Section */}
-      <div className="card">
+      <Card>
         <h3>Upload Photos</h3>
 
         <input
@@ -94,11 +75,10 @@ export default function AdminClassPage() {
           onChange={(e) => setFiles(e.target.files)}
         />
 
-        <button onClick={handleUpload}>
+        <Button onClick={handleUpload}>
           {loading ? "Uploading..." : "Upload Photos"}
-        </button>
-      </div>
-
+        </Button>
+      </Card>
     </div>
   );
 }

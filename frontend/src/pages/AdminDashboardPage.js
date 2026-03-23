@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
+import Header from "../components/Header";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import "./AdminDashboardPage.css";
 
-export default function AdminDashboard() {
+export default function AdminDashboardPage() {
   const navigate = useNavigate();
 
   const [className, setClassName] = useState("");
@@ -65,26 +69,29 @@ export default function AdminDashboard() {
 
   const deleteClass = async (classCode) => {
     if (!classCode) {
-      alert("Select a Class")
+      alert("Select a Class");
       return;
     }
+
     setLoading(true);
 
-    try{
+    try {
       await API.post(
         "/admin/deleteClass",
-        { classCode }, 
+        { classCode },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setClasses(prev => prev.filter(c => c.code !== classCode));
-      alert("Class deleted!")
+
+      setClasses((prev) => prev.filter((c) => c.code !== classCode));
+      alert("Class deleted!");
     } catch (err) {
       alert(err.response?.data?.error || "Error Deleting class");
     }
+
     setLoading(false);
   };
 
@@ -96,16 +103,14 @@ export default function AdminDashboard() {
 
   return (
     <div className="dashboard">
-
-      <div className="header">
-        <h2>Admin Dashboard</h2>
-        <button className="secondary-btn" onClick={handleLogout}>
+      <Header title="Admin Dashboard">
+        <Button className="secondary-btn" onClick={handleLogout}>
           Logout
-        </button>
-      </div>
+        </Button>
+      </Header>
 
       {classes.length === 0 && (
-        <div className="card">
+        <Card>
           <h3>Create Your First Class</h3>
 
           <input
@@ -114,15 +119,15 @@ export default function AdminDashboard() {
             onChange={(e) => setClassName(e.target.value)}
           />
 
-          <button onClick={handleCreateClass}>
+          <Button onClick={handleCreateClass}>
             {loading ? "Creating..." : "Create Class"}
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {classes.length > 0 && (
         <>
-          <div className="card">
+          <Card>
             <h3>Create New Class</h3>
 
             <input
@@ -131,12 +136,12 @@ export default function AdminDashboard() {
               onChange={(e) => setClassName(e.target.value)}
             />
 
-            <button onClick={handleCreateClass}>
+            <Button onClick={handleCreateClass}>
               {loading ? "Creating..." : "Create Class"}
-            </button>
-          </div>
+            </Button>
+          </Card>
 
-          <div className="card">
+          <Card>
             <h3>Your Classes</h3>
 
             <div className="class-list">
@@ -147,16 +152,19 @@ export default function AdminDashboard() {
                     <p>Code: {cls.code}</p>
                   </div>
 
-                  <button onClick={() => handleEnterClass(cls.code)}>
-                    Enter
-                  </button>
-                  <button onClick={() => deleteClass(cls.code)}>
-                    Delete
-                  </button>
+                  <div className="actions">
+                    <Button onClick={() => handleEnterClass(cls.code)}>
+                      Enter
+                    </Button>
+
+                    <Button onClick={() => deleteClass(cls.code)}>
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </>
       )}
     </div>
