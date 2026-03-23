@@ -47,6 +47,34 @@ export default function AdminClassPage() {
     setLoading(false);
   };
 
+  const handleSearch = async () => {
+    if (!classCode) {
+      alert("Enter class code first");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await API.post(
+        "/search",
+        { classCode },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setImages(res.data.images || []);
+    } catch (err) {
+      alert(err.response?.data?.error || "Search failed");
+    }
+
+    setLoading(false);
+  };
+
   const getAllImages = async () => {
     if (!classCode) {
       alert("Enter class code first");
@@ -110,6 +138,7 @@ export default function AdminClassPage() {
       </Card>
       <Card>
         <Button onClick={getAllImages}>Show All Images</Button>
+        <Button onClick={handleSearch}>Show My Images</Button>
         <br />
         <br />
         <div className="grid">
