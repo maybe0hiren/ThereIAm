@@ -75,6 +75,29 @@ export default function AdminClassPage() {
     setLoading(false);
   };
 
+
+  const handleDeleteImage = async (imageID) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await API.post(
+        "/admin/deleteImage",
+        { imageID },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setImages((prev) => prev.filter((img) => img.id !== imageID));
+
+    } catch (err) {
+      alert(err.response?.data?.error || "Delete failed");
+    }
+  };
+
+
   const getAllImages = async () => {
     if (!classCode) {
       alert("Enter class code first");
@@ -144,7 +167,10 @@ export default function AdminClassPage() {
         <div className="grid">
           {images.map((img, i) => (
             <div key={i}>
-              <img src={`http://localhost:5000/images/${img}`} alt="result" />
+              <img src={`http://localhost:5000/images/${img.path}`} />
+              <Button onClick={() => handleDeleteImage(img.id)}>
+                Delete
+              </Button>
             </div>
           ))}
         </div>

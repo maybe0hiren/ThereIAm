@@ -86,7 +86,7 @@ export default function Dashboard() {
       <div className="grid">
         {images.map((img, i) => (
           <div key={i}>
-            <img src={`http://localhost:5000/images/${img}`} alt="result" />
+            <img src={`http://localhost:5000/images/${img.path}`} alt="result" />
             <Button onClick={() => downloadImage(img, i)}>Download</Button>
           </div>
         ))}

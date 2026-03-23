@@ -2,6 +2,7 @@ from insightface.app import FaceAnalysis
 from pathlib import Path
 import cv2
 import shutil
+import os
 
 from helpers import generateEmbeddings
 from imgProcessing.faceDetection import detectFaces
@@ -116,7 +117,7 @@ def deleteClassPipeline(classCode):
         print("Deletion error: ", e)
         raise e
 
-def getAllImages(classCode):
+def getAllImagesPipeline(classCode):
     print("Entered Show All Photos Pipeline")
     try:
         classID = dbHandlers.getClassByCode(classCode)
@@ -128,3 +129,16 @@ def getAllImages(classCode):
     except Exception as e:
         print("Error Fetching Images: ", e)
         raise e
+
+
+def deleteImagePipeline(imageID):
+    print("Entered Delete Image Pipeline")
+    try:
+        imagePath = dbHandlers.getImagePath(imageID)
+        dbHandlers.deleteImage(imageID)
+        if os.path.exists(f"database/Images/{imagePath}"):
+            os.remove(f"database/Images/{imagePath}")
+    except Exception as e:
+        print("Error deleting: ", e)
+        raise(e)
+

@@ -74,7 +74,17 @@ def findImages(userID, classId, threshold=0.2):
 
     print(f"Matched Image IDs: {matches}")
 
-    result = [dbHandlers.getImagePath(i) for i in matches]
-    print(f"Final Image Paths: {result}")
+    result = []
+
+    for imageID in matches:
+        path = dbHandlers.getImagePath(imageID)
+
+        if path:
+            result.append({
+                "id": imageID,
+                "path": path
+            })
+
+    print(f"Final Images: {result}")
 
     return result

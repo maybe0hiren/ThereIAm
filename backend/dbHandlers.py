@@ -225,16 +225,34 @@ def returnClassImages(classID):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT Address 
+        SELECT ImageID, Address 
         FROM ImageTable
         WHERE ClassID = ?
     """, (classID,))
     rows = cursor.fetchall()
     conn.close()
     return [
-        row[0].replace("database/Images/", "")
+        {
+            "id": row[0],
+            "path": row[1].replace("database/Images/", "")
+        }
         for row in rows
     ]
+
+
+def deleteImage(imageId):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM FaceHashTable WHERE ImageID=?",
+        (imageId,)
+    )
+    cursor.execute(
+        "DELETE FROM ImageTable WHERE ImageID=?",
+        (imageId,)
+    )
+    conn.commit()
+    conn.close()
 
 if __name__ == "__main__":
     setup()
