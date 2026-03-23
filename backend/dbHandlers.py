@@ -221,5 +221,20 @@ def deleteClass(classId):
     conn.close()
 
 
+def returnClassImages(classID):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT Address 
+        FROM ImageTable
+        WHERE ClassID = ?
+    """, (classID,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [
+        row[0].replace("database/Images/", "")
+        for row in rows
+    ]
+
 if __name__ == "__main__":
     setup()

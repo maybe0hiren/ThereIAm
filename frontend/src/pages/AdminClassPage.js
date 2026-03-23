@@ -12,6 +12,7 @@ export default function AdminClassPage() {
 
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState([])
 
   const token = localStorage.getItem("token");
 
@@ -43,6 +44,34 @@ export default function AdminClassPage() {
       alert(err.response?.data?.error || "Upload failed");
     }
 
+    setLoading(false);
+  };
+
+  const getAllImages = async () => {
+    if (!classCode) {
+      alert("Enter class code first");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await API.post(
+        "/admin/getAllImages",
+        { classCode },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("API images:", res.data.images);
+      setImages(res.data.images || []);
+    } catch (err) {
+      alert(err.response?.data?.error || "Search failed");
+    }
     setLoading(false);
   };
 
@@ -78,6 +107,18 @@ export default function AdminClassPage() {
         <Button onClick={handleUpload}>
           {loading ? "Uploading..." : "Upload Photos"}
         </Button>
+      </Card>
+      <Card>
+        <Button onClick={getAllImages}>Show All Images</Button>
+        <br />
+        <br />
+        <div className="grid">
+          {images.map((img, i) => (
+            <div key={i}>
+              <img src={`http://localhost:5000/images/${img}`} alt="result" />
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );

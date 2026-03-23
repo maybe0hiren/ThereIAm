@@ -115,3 +115,16 @@ def deleteClassPipeline(classCode):
     except Exception as e:
         print("Deletion error: ", e)
         raise e
+
+def getAllImages(classCode):
+    print("Entered Show All Photos Pipeline")
+    try:
+        classID = dbHandlers.getClassByCode(classCode)
+        if not classID:
+            raise ValueError("Invalid class code")
+        images = dbHandlers.returnClassImages(classID)
+        return images
+    
+    except Exception as e:
+        print("Error Fetching Images: ", e)
+        raise e
