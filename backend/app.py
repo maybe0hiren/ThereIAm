@@ -7,8 +7,9 @@ from pathlib import Path
 import uuid
 from flask_cors import CORS
 
-from main import imgToDB, registrationPipeline, loginPipeline, searchPipeline, deleteClassPipeline, getAllImagesPipeline, deleteImagePipeline
+from main import imgToDB, registrationPipeline, loginPipeline, searchPipeline, deleteClassPipeline, getAllImagesPipeline, deleteImagePipeline, getClassMembersPipeline, getUserClassesPipeline
 import dbHandlers
+import faissHandler
 
 UPLOAD_DIR = Path("database/Images")
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -209,15 +210,51 @@ def search(userID, role):
     print("Search Endpoint called")
     data = request.json
     classCode = data.get("classCode")
+    friendIDs = data.get("friendIDs") or []
+    if not classCode:
+        return jsonify({"error": "Class code required"}), 400
+
+    try:
+        images = searchPipeline(friendIDs, userID, classCode)
+
+        return jsonify({
+            "images": images
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/classMembers", methods=["POST"])
+@tokenRequired
+def getClassMembers(userID, role):
+    print("Get Class Members Endpoint called")
+
+    data = request.json
+    classCode = data.get("classCode")
 
     if not classCode:
         return jsonify({"error": "Class code required"}), 400
 
     try:
-        images = searchPipeline(userID, classCode)
+        members = getClassMembersPipeline(userID, classCode)
 
         return jsonify({
-            "images": images
+            "members": members
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/myClasses", methods=["GET"])
+@tokenRequired
+def getUserClasses(userID, role):
+    print("Get User Classes Endpoint called")
+
+    try:
+        classes = getUserClassesPipeline(userID)
+
+        return jsonify({
+            "classes": classes
         })
 
     except Exception as e:
@@ -271,4 +308,6 @@ def serveImage(filename):
 
 
 if __name__ == "__main__":
+    dbHandlers.setup()
+    faissHandler.buildIndex() 
     app.run(host="0.0.0.0", port=5000)

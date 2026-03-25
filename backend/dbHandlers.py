@@ -53,9 +53,17 @@ def setup():
         );
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ClassMembers (
+            ClassID TEXT NOT NULL,
+            UserID TEXT NOT NULL,
+            PRIMARY KEY (ClassID, UserID)
+        );
+    """)
+
+
     conn.commit()
     conn.close()
-
 
 def createUser(username, email, passwordHash, role="member"):
     conn = sqlite3.connect(DB_PATH)
@@ -253,6 +261,74 @@ def deleteImage(imageId):
     )
     conn.commit()
     conn.close()
+
+def getAllImageFacesByClassGlobal():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT ImageID, HashValue FROM FaceHashTable
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [(r[0], np.frombuffer(r[1], dtype="float32")) for r in rows]
+
+def addUserToClass(classID, userID):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO ClassMembers (ClassID, UserID)
+        VALUES (?, ?)
+    """, (classID, userID))
+
+    conn.commit()
+    conn.close()
+
+
+def getClassMembers(classID):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT u.UserID, u.UserName
+        FROM ClassMembers cm
+        JOIN UserTable u ON cm.UserID = u.UserID
+        WHERE cm.ClassID = ?
+    """, (classID,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [
+        {
+            "id": r[0],
+            "name": r[1]
+        }
+        for r in rows
+    ]
+
+def getClassesByUser(userID):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT c.ClassName, c.ClassCode
+        FROM ClassMembers cm
+        JOIN ClassTable c ON cm.ClassID = c.ClassID
+        WHERE cm.UserID = ?
+    """, (userID,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [
+        {
+            "name": r[0],
+            "code": r[1]
+        }
+        for r in rows
+    ]
+
 
 if __name__ == "__main__":
     setup()

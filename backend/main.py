@@ -7,6 +7,7 @@ import os
 from helpers import generateEmbeddings
 from imgProcessing.faceDetection import detectFaces
 import dbHandlers
+import faissHandler
 from userHandlers import registerUser
 from userHandlers import loginUser
 from userHandlers import findImages
@@ -55,7 +56,8 @@ def imgToDB(imagesFolder, classID):
                 print(e)
                 continue
         if faceHashList:
-            dbHandlers.addImageToDB(str(imagePath), faceHashList, classID)
+            imageID = dbHandlers.addImageToDB(str(imagePath), faceHashList, classID)
+            faissHandler.addEmbeddings(imageID, faceHashList)
 
 
 def registrationPipeline(imagesFolder, name, email, password, role):
@@ -90,14 +92,14 @@ def loginPipeline(email, password):
         print("Login failed:", e)
         return None
 
-def searchPipeline(userID, classCode):
+def searchPipeline(friendIDs, userID, classCode):
     print("Entered search pipeline")
     try:
         classId = dbHandlers.getClassByCode(classCode)
         if not classId:
             raise ValueError("Invalid class code")
 
-        images = findImages(userID, classId)
+        images = findImages(friendIDs, userID, classId)
         return images
 
     except Exception as e:
@@ -135,10 +137,47 @@ def deleteImagePipeline(imageID):
     print("Entered Delete Image Pipeline")
     try:
         imagePath = dbHandlers.getImagePath(imageID)
+
         dbHandlers.deleteImage(imageID)
-        if os.path.exists(f"database/Images/{imagePath}"):
-            os.remove(f"database/Images/{imagePath}")
+        faissHandler.removeImage(imageID)
+
+        fullPath = f"database/Images/{imagePath}"
+
+        if os.path.exists(fullPath):
+            os.remove(fullPath)
+
     except Exception as e:
         print("Error deleting: ", e)
         raise(e)
 
+
+def getClassMembersPipeline(userID, classCode):
+    print("Entered Get Class Members Pipeline")
+
+    try:
+        classID = dbHandlers.getClassByCode(classCode)
+
+        if not classID:
+            raise ValueError("Invalid class code")
+
+        dbHandlers.addUserToClass(classID, userID)
+
+        members = dbHandlers.getClassMembers(classID)
+
+        return members
+
+    except Exception as e:
+        print("Error in getClassMembersPipeline:", e)
+        raise e
+
+
+def getUserClassesPipeline(userID):
+    print("Entered Get User Classes Pipeline")
+
+    try:
+        classes = dbHandlers.getClassesByUser(userID)
+        return classes
+
+    except Exception as e:
+        print("Error in getUserClassesPipeline:", e)
+        raise e

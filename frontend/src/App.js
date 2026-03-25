@@ -5,6 +5,7 @@ import Register from "./pages/RegisterPage";
 import Dashboard from "./pages/DashboardPage";
 import AdminDashboard from "./pages/AdminDashboardPage";
 import AdminClassPage from "./pages/AdminClassPage";
+import MemberClassPage from "./pages/MemberClassPage";
 
 // 🔐 Helpers
 const getToken = () => localStorage.getItem("token");
@@ -65,6 +66,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/class/:classCode" element={<MemberClassPage />} />
 
       </Routes>
     </BrowserRouter>

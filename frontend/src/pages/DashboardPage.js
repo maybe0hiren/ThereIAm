@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
@@ -9,32 +9,74 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [classCode, setClassCode] = useState("");
-  const [images, setImages] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
+  const token = localStorage.getItem("token");
+
+  // 🔹 Fetch user classes
+  const fetchClasses = async () => {
+    try {
+      const res = await API.get("/myClasses", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // 🔥 Sort classes alphabetically
+      const sorted = (res.data.classes || []).sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
+
+      setClasses(sorted);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchClasses();
+  }, []);
+
+  // 🔹 Join class via code
+  const handleJoinClass = async () => {
     if (!classCode) {
       alert("Enter class code first");
+      return;
+    }
+
+    const upperCode = classCode.toUpperCase();
+
+    // 🔥 Prevent duplicate join
+    if (classes.some((c) => c.code === upperCode)) {
+      navigate(`/class/${upperCode}`);
       return;
     }
 
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await API.post(
-        "/search",
-        { classCode },
+      await API.post(
+        "/classMembers",
+        { classCode: upperCode },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setImages(res.data.images || []);
+
+      // 🔥 Refresh classes
+      await fetchClasses();
+
+      // 🔥 Clear input
+      setClassCode("");
+
+      // 🔥 Navigate
+      navigate(`/class/${upperCode}`);
+
     } catch (err) {
-      alert(err.response?.data?.error || "Search failed");
+      alert(err.response?.data?.error || "Failed to join class");
     }
 
     setLoading(false);
@@ -45,24 +87,6 @@ export default function Dashboard() {
     navigate("/");
   };
 
-  const downloadImage = async (imgPath, index) => {
-    try {
-      const url = `http://localhost:5000/images/${imgPath}`;
-      const response = await fetch(url);
-      const blob = await response.blob();
-
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `image_${index}.jpg`;
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      alert("Download failed");
-    }
-  };
-
   return (
     <div className="dashboard">
       <Header title="ThereIAm">
@@ -71,25 +95,43 @@ export default function Dashboard() {
         </Button>
       </Header>
 
-      <div className="search-section">
+      {/* 🔹 Join Class */}
+      <div className="card">
+        <h3>Join a Class</h3>
+
         <input
           placeholder="Enter Class Code"
           value={classCode}
           onChange={(e) => setClassCode(e.target.value.toUpperCase())}
         />
 
-        <Button onClick={handleSearch} disabled={!classCode}>
-          {loading ? "Searching..." : "Find My Photos"}
+        <Button onClick={handleJoinClass} disabled={!classCode || loading}>
+          {loading ? "Joining..." : "Enter Class"}
         </Button>
       </div>
 
-      <div className="grid">
-        {images.map((img, i) => (
-          <div key={i}>
-            <img src={`http://localhost:5000/images/${img.path}`} alt="result" />
-            <Button onClick={() => downloadImage(img, i)}>Download</Button>
+      {/* 🔹 My Classes */}
+      <div className="card">
+        <h3>My Classes</h3>
+
+        {classes.length === 0 ? (
+          <p>No classes joined yet</p>
+        ) : (
+          <div className="class-list">
+            {classes.map((cls, i) => (
+              <div key={i} className="class-item">
+                <div>
+                  <b>{cls.name}</b>
+                  <p>Code: {cls.code}</p>
+                </div>
+
+                <Button onClick={() => navigate(`/class/${cls.code}`)}>
+                  Enter
+                </Button>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

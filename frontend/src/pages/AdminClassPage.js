@@ -98,6 +98,26 @@ export default function AdminClassPage() {
   };
 
 
+  const downloadImage = async (imgPath, index) => {
+    try {
+      const url = `http://localhost:5000/images/${imgPath}`;
+
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `image_${index}.jpg`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      alert("Download failed");
+    }
+  };
+
+
   const getAllImages = async () => {
     if (!classCode) {
       alert("Enter class code first");
@@ -170,6 +190,9 @@ export default function AdminClassPage() {
               <img src={`http://localhost:5000/images/${img.path}`} />
               <Button onClick={() => handleDeleteImage(img.id)}>
                 Delete
+              </Button>
+              <Button onClick={() => downloadImage(img.path, i)}>
+                Download
               </Button>
             </div>
           ))}

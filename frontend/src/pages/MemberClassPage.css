@@ -1,0 +1,44 @@
+.members-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.member-item {
+  padding: 10px 15px;
+  border-radius: 12px;
+  background: #fffdf5;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 14px;
+}
+
+.member-item:hover {
+  background: #f1f3f5;
+}
+
+.member-item.selected {
+  background: linear-gradient(135deg, #f4d35e, #ffd166);
+  border-color: #f4d35e;
+  font-weight: bold;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.grid img {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  transition: 0.2s;
+}
+
+.grid img:hover {
+  transform: scale(1.03);
+}
