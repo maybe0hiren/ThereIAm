@@ -10,6 +10,7 @@ from flask_cors import CORS
 from main import imgToDB, registrationPipeline, loginPipeline, searchPipeline, deleteClassPipeline, getAllImagesPipeline, deleteImagePipeline, getClassMembersPipeline, getUserClassesPipeline
 import dbHandlers
 import faissHandler
+from emailUtils import verifyToken
 
 UPLOAD_DIR = Path("database/Images")
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -305,6 +306,20 @@ def deleteImage(userID, role):
 @app.route("/images/<path:filename>")
 def serveImage(filename):
     return send_from_directory("database/Images", filename)
+
+@app.route("/verifyEmail/<token>", methods=["GET"])
+def verifyEmail(token):
+    email = verifyToken(token)
+
+    if not email:
+        return jsonify({"error": "Invalid or expired token"}), 400
+
+    dbHandlers.verifyUserEmail(email)
+
+    return jsonify({
+        "success": True,
+        "message": "Email verified"
+    })
 
 
 if __name__ == "__main__":

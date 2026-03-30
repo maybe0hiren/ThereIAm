@@ -17,7 +17,8 @@ def setup():
             UserName TEXT NOT NULL,
             Email TEXT UNIQUE NOT NULL,
             PasswordHash BLOB NOT NULL,
-            Role TEXT NOT NULL
+            Role TEXT NOT NULL,
+            IsVerified INTEGER DEFAULT 0
         );
     """)
 
@@ -61,9 +62,10 @@ def setup():
         );
     """)
 
-
     conn.commit()
     conn.close()
+    print("DB Setup Complete")
+
 
 def createUser(username, email, passwordHash, role="member"):
     conn = sqlite3.connect(DB_PATH)
@@ -77,13 +79,45 @@ def createUser(username, email, passwordHash, role="member"):
     userId = str(uuid.uuid4())
 
     cursor.execute("""
-        INSERT INTO UserTable (UserID, UserName, Email, PasswordHash, Role)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO UserTable (
+            UserID, UserName, Email, PasswordHash, Role, IsVerified
+        )
+        VALUES (?, ?, ?, ?, ?, 0)
     """, (userId, username, email, passwordHash, role))
 
     conn.commit()
     conn.close()
     return userId
+
+
+def verifyUserEmail(email):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE UserTable
+        SET IsVerified = 1
+        WHERE Email = ?
+    """, (email,))
+
+    conn.commit()
+    conn.close()
+
+
+def isUserVerified(email):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT IsVerified
+        FROM UserTable
+        WHERE Email = ?
+    """, (email,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return bool(row[0]) if row else False
 
 
 def addUserEmbeddings(userId, embeddings):
@@ -204,7 +238,8 @@ def getImagePath(imageId):
     row = cursor.fetchone()
 
     conn.close()
-    return (row[0]).replace("database/Images/", "") if row else None
+    return row[0].replace("database/Images/", "") if row else None
+
 
 def getClassesByAdmin(adminId):
     conn = sqlite3.connect(DB_PATH)
@@ -219,12 +254,12 @@ def getClassesByAdmin(adminId):
 
     return [{"name": r[0], "code": r[1]} for r in rows]
 
+
 def deleteClass(classId):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM ImageTable WHERE ClassID=?", (classId,))
     cursor.execute("DELETE FROM ClassTable WHERE ClassID=?", (classId,))
-
     conn.commit()
     conn.close()
 
@@ -232,13 +267,16 @@ def deleteClass(classId):
 def returnClassImages(classID):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute("""
-        SELECT ImageID, Address 
+        SELECT ImageID, Address
         FROM ImageTable
         WHERE ClassID = ?
     """, (classID,))
+
     rows = cursor.fetchall()
     conn.close()
+
     return [
         {
             "id": row[0],
@@ -251,26 +289,34 @@ def returnClassImages(classID):
 def deleteImage(imageId):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute(
         "DELETE FROM FaceHashTable WHERE ImageID=?",
         (imageId,)
     )
+
     cursor.execute(
         "DELETE FROM ImageTable WHERE ImageID=?",
         (imageId,)
     )
+
     conn.commit()
     conn.close()
+
 
 def getAllImageFacesByClassGlobal():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute("""
         SELECT ImageID, HashValue FROM FaceHashTable
     """)
+
     rows = cursor.fetchall()
     conn.close()
+
     return [(r[0], np.frombuffer(r[1], dtype="float32")) for r in rows]
+
 
 def addUserToClass(classID, userID):
     conn = sqlite3.connect(DB_PATH)
@@ -306,6 +352,7 @@ def getClassMembers(classID):
         }
         for r in rows
     ]
+
 
 def getClassesByUser(userID):
     conn = sqlite3.connect(DB_PATH)

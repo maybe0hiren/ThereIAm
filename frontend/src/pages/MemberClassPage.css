@@ -42,3 +42,22 @@
 .grid img:hover {
   transform: scale(1.03);
 }
+
+.image-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  justify-content: center;
+}
+
+.image-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.selected-image {
+  outline: 4px solid #f4d35e;
+  border-radius: 12px;
+}

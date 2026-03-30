@@ -6,22 +6,19 @@ import Dashboard from "./pages/DashboardPage";
 import AdminDashboard from "./pages/AdminDashboardPage";
 import AdminClassPage from "./pages/AdminClassPage";
 import MemberClassPage from "./pages/MemberClassPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
-// 🔐 Helpers
 const getToken = () => localStorage.getItem("token");
 const getRole = () => localStorage.getItem("role");
 
-// 🔐 Protected Route Component
 const ProtectedRoute = ({ children, roleRequired }) => {
   const token = getToken();
   const role = getRole();
 
-  // Not logged in
   if (!token) {
     return <Navigate to="/" />;
   }
 
-  // Role mismatch
   if (roleRequired && role !== roleRequired) {
     return <Navigate to="/" />;
   }
@@ -33,12 +30,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Public */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
-        {/* Member */}
         <Route
           path="/dashboard"
           element={
@@ -48,7 +43,6 @@ function App() {
           }
         />
 
-        {/* Admin */}
         <Route
           path="/admin"
           element={
@@ -67,8 +61,14 @@ function App() {
           }
         />
 
-        <Route path="/class/:classCode" element={<MemberClassPage />} />
-
+        <Route
+          path="/class/:classCode"
+          element={
+            <ProtectedRoute roleRequired="member">
+              <MemberClassPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

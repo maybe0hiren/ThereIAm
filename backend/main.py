@@ -11,6 +11,7 @@ import faissHandler
 from userHandlers import registerUser
 from userHandlers import loginUser
 from userHandlers import findImages
+from emailUtils import sendVerificationEmail
 
 
 embedder = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
@@ -68,7 +69,7 @@ def registrationPipeline(imagesFolder, name, email, password, role):
     for imagePath in imagesFolder.iterdir():
         if imagePath.suffix.lower() not in {".jpg", ".jpeg", ".png", ".bmp", ".webp"}:
             continue
-        image = cv2.imread(str(imagePath))   
+        image = cv2.imread(str(imagePath))
         if image is None or image.size == 0:
             continue
         image = cv2.resize(image, (640, 640))
@@ -76,21 +77,23 @@ def registrationPipeline(imagesFolder, name, email, password, role):
         image = cv2.equalizeHist(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY))
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         userImages.append(image)
-
     if not userImages:
         raise ValueError("No valid faces found for user registration")
     userID = registerUser(name, email, password, userImages, embedder, role)
+    sendVerificationEmail(email)
     return userID
 
 
 def loginPipeline(email, password):
     try:
+        if not dbHandlers.isUserVerified(email):
+            raise ValueError("Please verify your email first")
         userID = loginUser(email, password)
         print("Login successful.")
         return userID
     except Exception as e:
         print("Login failed:", e)
-        return None
+        raise e
 
 def searchPipeline(friendIDs, userID, classCode):
     print("Entered search pipeline")

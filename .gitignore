@@ -6,3 +6,5 @@ backend/database/Images
 __pycache__/
 *.onnx
 *.db
+
+*.env
