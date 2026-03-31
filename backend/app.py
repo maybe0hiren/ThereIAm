@@ -142,7 +142,7 @@ def getAllImagesFromClass(userID, classCode):
         images = getAllImagesPipeline(classCode)
         return jsonify({"images": images})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Cannot retrieve Images"}), 500
 
 
 @app.route("/register", methods=["POST"])
@@ -201,7 +201,7 @@ def login():
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 401
+        return jsonify({"error": "Login Failed"}), 401
 
 
 
@@ -223,7 +223,7 @@ def search(userID, role):
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "No images found"}), 500
 
 @app.route("/classMembers", methods=["POST"])
 @tokenRequired
@@ -244,7 +244,7 @@ def getClassMembers(userID, role):
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Error fetching class members"}), 500
 
 @app.route("/myClasses", methods=["GET"])
 @tokenRequired
@@ -259,7 +259,7 @@ def getUserClasses(userID, role):
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Error fetching your classes"}), 500
 
 @app.route("/admin/deleteClass", methods=["POST"])
 @tokenRequired
@@ -299,7 +299,7 @@ def deleteImage(userID, role):
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Error deleting images"}), 500
 
 
 

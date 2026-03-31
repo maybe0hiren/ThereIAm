@@ -94,7 +94,7 @@ export default function Register() {
 
     try {
       await API.post("/register", data);
-      alert("Registered");
+      alert("Registered: Verify your email before you login");
 
       if (stream) stream.getTracks().forEach(track => track.stop());
 
